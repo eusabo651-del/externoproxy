@@ -23,9 +23,23 @@ struct PanelConfig: Codable, Identifiable {
     )
 }
 
-struct LicenseKey: Codable, Identifiable {
-    var id: String?
+struct UrbanKey: Codable, Identifiable {
     var key: String
-    var active: Bool
-    var user: String?
+    var used: Bool?
+    var device: String?
+    var expire: Int?
+    var type: String?
+    var createdAt: Int?
+    var activatedAt: Int?
+    var expiresAt: Int?
+    var onlineAt: Int?
+    var status: String?
+    var username: String?
+    var id: String?
+
+    enum CodingKeys: String, CodingKey {
+        case key, used, device, expire, type
+        case createdAt, activatedAt, expiresAt, onlineAt
+        case status, username, id
+    }
 }
