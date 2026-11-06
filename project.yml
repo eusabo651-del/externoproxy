@@ -13,11 +13,13 @@ targets:
     type: application
     platform: iOS
     sources:
-      - path: IOSPRIVATE
+      - path: .
+        includes:
+          - "*.swift"
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.iosprivate.app
-        INFOPLIST_FILE: IOSPRIVATE/Info.plist
+        INFOPLIST_FILE: Info.plist
         GENERATE_INFOPLIST_FILE: NO
         TARGETED_DEVICE_FAMILY: "1"
     scheme:
