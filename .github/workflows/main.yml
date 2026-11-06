@@ -1,24 +1,50 @@
-name: IOSPRIVATE
-options:
-  bundleIdPrefix: com.iosprivate
-  deploymentTarget:
-    iOS: "17.0"
-  createIntermediateGroups: true
-settings:
-  base:
-    SWIFT_VERSION: "5.0"
-    CODE_SIGN_STYLE: Manual
-targets:
-  IOSPRIVATE:
-    type: application
-    platform: iOS
-    sources:
-      - path: IOSPRIVATE
-    settings:
-      base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.iosprivate.app
-        INFOPLIST_FILE: IOSPRIVATE/Info.plist
-        GENERATE_INFOPLIST_FILE: NO
-        TARGETED_DEVICE_FAMILY: "1"
-    scheme:
-      testTargets: []
+name: Build IOSPRIVATE IPA
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install xcodegen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Build unsigned .app
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project IOSPRIVATE.xcodeproj \
+            -scheme IOSPRIVATE \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            -derivedDataPath ./build \
+            build
+
+      - name: Package IPA
+        run: |
+          APP=$(find ./build/Build/Products/Release-iphoneos -maxdepth 1 -name "*.app" | head -1)
+          if [ -z "$APP" ]; then echo "::error::No .app found"; exit 1; fi
+          echo "Found: $APP"
+          mkdir -p Payload
+          cp -R "$APP" Payload/
+          zip -r IOSPRIVATE.ipa Payload
+          ls -lh IOSPRIVATE.ipa
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: IOSPRIVATE-ipa
+          path: IOSPRIVATE.ipa
+          retention-days: 7
